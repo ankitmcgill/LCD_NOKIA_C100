@@ -99,3 +99,4 @@ void LCD_NOKIA_C100_clear_screen(uint16_t color)
 		LCD_NOKIA_C100_send_data(l);
 	}
 }
+
