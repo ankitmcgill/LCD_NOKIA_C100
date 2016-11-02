@@ -36,6 +36,7 @@
 //FUNCTION POINTER TO SPI SEND FUNCTION
 void (*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)(uint8_t, uint8_t, uint32_t, uint32_t);
 
+void LCD_NOKIA_C100_set_pins(void);
 void LCD_NOKIA_C100_init(void);
 void LCD_NOKIA_C100_send_command(uint8_t command);
 void LCD_NOKIA_C100_send_data(uint8_t data);
