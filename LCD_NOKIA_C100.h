@@ -14,6 +14,7 @@
 #include <ets_sys.h>
 #include "gpio.h"
 #include "ESP8266_SPI.h"
+#include "ESP8266_FLASH.h"
 
 //LCD COMMAND DEFINES
 #define LCD_NOKIA_C100_COMMAND_NOP		0x00
@@ -30,8 +31,10 @@
 #define LCD_NOKIA_C100_COMMAND_RASET	0x2B
 #define LCD_NOKIA_C100_COMMAND_RAMWR	0x2C
 #define LCD_NOKIA_C100_COMMAND_RBGSET	0x2D
+#define LCD_NOKIA_C100_COMMAND_MADCTR	0x36
 #define LCD_NOKIA_C100_COMMAND_IDMOFF	0x38
 #define LCD_NOKIA_C100_COMMAND_IDMON	0x39
+#define LCD_NOKIA_C100_COMMAND_COLMOD	0x3A
 
 //16-bit color definitions
 //565 RGB FORMAT
@@ -58,9 +61,10 @@ void LCD_NOKIA_C100_init(void);
 void LCD_NOKIA_C100_send_command(uint8_t command);
 void LCD_NOKIA_C100_send_data(uint8_t data);
 
-void LCD_NOKIA_C100_reset_xy(void);
+void LCD_NOKIA_C100_set_xy_area(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end);
 void LCD_NOKIA_C100_clear_screen(uint16_t color);
 
-void LCD_NOKIA_C100_draw_ebu_test_pattern(void);
+void LCD_NOKIA_C100_draw_bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint32_t bitmap_flash_address, uint32_t bitmap_size_bytes);
+void LCD_NOKIA_C100_draw_text(uint8_t x_start, uint8_t y_start, const uint8_t* font_map, const uint16_t (*font_descriptor_map)[3], uint8_t font_width, uint8_t font_height, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);
 
 #endif
