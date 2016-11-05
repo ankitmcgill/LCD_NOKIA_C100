@@ -66,5 +66,7 @@ void LCD_NOKIA_C100_clear_screen(uint16_t color);
 
 void LCD_NOKIA_C100_draw_bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint32_t bitmap_flash_address, uint32_t bitmap_size_bytes);
 void LCD_NOKIA_C100_draw_text(uint8_t x_start, uint8_t y_start, const uint8_t* font_map, const uint16_t (*font_descriptor_map)[3], uint8_t font_width, uint8_t font_height, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);
+void LCD_NOKIA_C100_draw_filled_box(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint16_t color);
+void LCD_NOKIA_C100_draw_outline_box(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint8_t border_size, uint16_t color);
 
 #endif
