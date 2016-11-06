@@ -135,15 +135,28 @@ void LCD_NOKIA_C100_draw_bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start,
 
 	uint32_t i=0;
 	uint32_t read_address = bitmap_flash_address;
+	int32_t temp;
+
 	while(num_1kb_blocks != 0)
 	{
 		ESP8266_FLASH_read(read_address, buffer, 1024);
 		for(i=0; i<256; i++)
 		{
-			p1 = (uint8_t)(buffer[i] >> 24);
-			p2 = (uint8_t)((buffer[i] & 0x00FF0000) >> 16);
-			p3 = (uint8_t)((buffer[i] & 0x0000FF00) >> 24);
-			p4 = (uint8_t)buffer[i];
+			temp = buffer[i];
+			temp = (temp & 0xFF000000) >> 24;
+			p1 = (uint8_t)temp;
+
+			temp = buffer[i];
+			temp = (temp & 0x00FF0000) >> 16;
+			p2 = (uint8_t)temp;
+
+			temp = buffer[i];
+			temp = (temp & 0x0000FF00) >> 8;
+			p3 = (uint8_t)temp;
+
+			temp = buffer[i];
+			temp = (temp & 0x000000FF);
+			p4 = (uint8_t)temp;
 
 			LCD_NOKIA_C100_send_data(p1);
 			LCD_NOKIA_C100_send_data(p2);
@@ -157,10 +170,21 @@ void LCD_NOKIA_C100_draw_bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start,
 	ESP8266_FLASH_read(read_address, buffer, 1024);
 	for(i=0; i<(num_remaining_bytes/4); i++)
 	{
-		p1 = (uint8_t)(buffer[i] >> 24);
-		p2 = (uint8_t)((buffer[i] & 0x00FF0000) >> 16);
-		p3 = (uint8_t)((buffer[i] & 0x0000FF00) >> 24);
-		p4 = (uint8_t)buffer[i];
+		temp = buffer[i];
+		temp = (temp & 0xFF000000) >> 24;
+		p1 = (uint8_t)temp;
+
+		temp = buffer[i];
+		temp = (temp & 0x00FF0000) >> 16;
+		p2 = (uint8_t)temp;
+
+		temp = buffer[i];
+		temp = (temp & 0x0000FF00) >> 8;
+		p3 = (uint8_t)temp;
+
+		temp = buffer[i];
+		temp = (temp & 0x000000FF);
+		p4 = (uint8_t)temp;
 
 		LCD_NOKIA_C100_send_data(p1);
 		LCD_NOKIA_C100_send_data(p2);
@@ -331,32 +355,6 @@ void LCD_NOKIA_C100_draw_outline_box(uint8_t x_start, uint8_t x_end, uint8_t y_s
 	//DRAW A BOX OUTLINE BETWEEN THE GIVEN X AND Y BOUNDS AND
 	//AND OUTLINE WITH THE SPECIFIED COLOR
 
-	uint8_t h_color = (color>>8);
-	uint8_t l_color = (color);
-	uint16_t pixel_count = (x_end - x_start + 1) * (y_end - y_start + 1);
-	uint16_t i;
-
-	LCD_NOKIA_C100_set_xy_area(x_start, y_start, x_end, y_end);
-
-	//RAMWR
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_RAMWR);
-
-	for(i=0; i<pixel_count; i++)
-	{
-		LCD_NOKIA_C100_send_data(h_color);
-		LCD_NOKIA_C100_send_data(l_color);
-	}
-
-	pixel_count = ((x_end - border_size) - (x_start + border_size) + 1) * ((y_end - border_size) - (y_start + border_size) + 1);
-
-	LCD_NOKIA_C100_set_xy_area(x_start + border_size, y_start + border_size, x_end - border_size, y_end - border_size);
-
-	//RAMWR
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_RAMWR);
-
-	for(i=0; i<pixel_count; i++)
-	{
-		LCD_NOKIA_C100_send_data(0x00);
-		LCD_NOKIA_C100_send_data(0x00);
-	}
+	LCD_NOKIA_C100_draw_filled_box(x_start, x_end, y_start, y_end, color);
+	LCD_NOKIA_C100_draw_filled_box(x_start + border_size, x_end - border_size, y_start + border_size, y_end - border_size, LCD_NOKIA_C100_COLOR_BLACK);
 }
