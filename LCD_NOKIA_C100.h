@@ -40,15 +40,17 @@
 //565 RGB FORMAT
 //http://www.rinkydinkelectronics.com/calc_rgb565.php
 //http://cloford.com/resources/colours/namedcol.htm
-#define LCD_NOKIA_C100_COLOR_WHITE     0xFFFF
-#define LCD_NOKIA_C100_COLOR_BLACK     0x0000
-#define LCD_NOKIA_C100_COLOR_RED       0xF800
-#define LCD_NOKIA_C100_COLOR_GREEN     0x07E0
-#define LCD_NOKIA_C100_COLOR_BLUE      0x001F
-#define LCD_NOKIA_C100_COLOR_CYAN      0x07FF
-#define LCD_NOKIA_C100_COLOR_MAGENTA   0xF81F
-#define LCD_NOKIA_C100_COLOR_YELLOW    0xFFE0
-#define LCD_NOKIA_C100_COLOR_ORANGE    0xFD20
+#define LCD_NOKIA_C100_COLOR_WHITE     	0xFFFF
+#define LCD_NOKIA_C100_COLOR_BLACK     	0x0000
+#define LCD_NOKIA_C100_COLOR_RED       	0xF800
+#define LCD_NOKIA_C100_COLOR_GREEN     	0x07E0
+#define LCD_NOKIA_C100_COLOR_BLUE      	0x001F
+#define LCD_NOKIA_C100_COLOR_CYAN      	0x07FF
+#define LCD_NOKIA_C100_COLOR_MAGENTA   	0xF81F
+#define LCD_NOKIA_C100_COLOR_YELLOW    	0xFFE0
+#define LCD_NOKIA_C100_COLOR_ORANGE   	0xFD20
+#define LCD_NOKIA_C100_COLOR_LIGHT_PINK	0xFB33
+#define LCD_NOKIA_C100_COLOR_TEAL_BLUE	0x03B6
 
 #define LCD_NOKIA_C100_RST_LOW  GPIO_OUTPUT_SET(4, 0)
 #define LCD_NOKIA_C100_RST_HIGH GPIO_OUTPUT_SET(4, 1)
@@ -68,5 +70,7 @@ void LCD_NOKIA_C100_draw_bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start,
 void LCD_NOKIA_C100_draw_text(uint8_t x_start, uint8_t y_start, const uint8_t* font_map, const uint16_t (*font_descriptor_map)[3], uint8_t font_width, uint8_t font_height, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);
 void LCD_NOKIA_C100_draw_filled_box(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint16_t color);
 void LCD_NOKIA_C100_draw_outline_box(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint8_t border_size, uint16_t color);
+void LCD_NOKIA_C100_draw_line_horizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t thickness, uint16_t color);
+void LCD_NOKIA_C100_draw_line_vertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t thickness, uint16_t color);
 
 #endif

@@ -358,3 +358,17 @@ void LCD_NOKIA_C100_draw_outline_box(uint8_t x_start, uint8_t x_end, uint8_t y_s
 	LCD_NOKIA_C100_draw_filled_box(x_start, x_end, y_start, y_end, color);
 	LCD_NOKIA_C100_draw_filled_box(x_start + border_size, x_end - border_size, y_start + border_size, y_end - border_size, LCD_NOKIA_C100_COLOR_BLACK);
 }
+
+void LCD_NOKIA_C100_draw_line_horizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t thickness, uint16_t color)
+{
+	//DRAW A HORIZONTAL LINE STARTING AT X_START, Y WITH THE THICKNESS SPECIFIED
+
+	LCD_NOKIA_C100_draw_filled_box(x_start, x_end, y, y + thickness, color);
+}
+
+void LCD_NOKIA_C100_draw_line_vertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t thickness, uint16_t color)
+{
+	//DRAW A VERTICAL LINE STARTING AT X, Y_START WITH THE THICKNESS SPECIFIED
+
+	LCD_NOKIA_C100_draw_filled_box(x, x + thickness, y_start, y_end, color);
+}
