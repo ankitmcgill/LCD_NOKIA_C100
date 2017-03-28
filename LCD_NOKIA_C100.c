@@ -1,106 +1,120 @@
 /*************************************************
 * NOKIA C100 TFT LIBRARY
+* ARM VERSION
 *
-* OCTOBER 30 2016
+* 132 x 162 TFT LCD COLOR
+* EACH PIXEL IS R(5) - G(6) - B(5)
+* 
+* MARCH 27 2017
 * ANKIT BHATNAGAR
 * ANKIT.BHATNAGARINDIA@GMAIL.COM
 * ***********************************************/
 
 #include "LCD_NOKIA_C100.h"
+#include "ARM_STM32_USART.h"
+#include "ARM_STM32_SYSTICK.h"
 
 //FUNCTION POINTER TO SPI SEND FUNCTION
-void (*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)(uint8_t, uint8_t, uint32_t, uint32_t) = &ESP8266_SPI_send;
+static void (*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)(uint16_t, uint8_t) = ARM_STM32_USART_Send_Char_Reversed_Usart1;
 
-void LCD_NOKIA_C100_set_pins(void)
+//FUNCTION POINTER FOR BLOCKING DELAY - US
+static void (*LCD_NOKIA_C100_DELAY_US)(uint32_t) = ARM_STM32_SYSTICK_Delay_Us;
+
+void LCD_NOKIA_C100_Set_Pins(void)
 {
 	//SET THE /RESET PIN GPIO FOR THE NOKIA
 	//LCD
 
-	//SET GPIO4 AS OUTPUT FOR RST LINE
-	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4);
+	GPIO_InitTypeDef gpio;
+	gpio.GPIO_Pin = LCD_NOKIA_C100_RST_PIN_NUM;
+	gpio.GPIO_Mode = GPIO_Mode_Out_PP;
+	gpio.GPIO_Speed = GPIO_Speed_10MHz;
+	
+	GPIO_Init(LCD_NOKIA_C100_RST_PIN_PORT, &gpio);
+	
+	//SET RESET LINE TO HIGH
 	LCD_NOKIA_C100_RST_HIGH;
 }
 
-void LCD_NOKIA_C100_init(void)
+void LCD_NOKIA_C100_Init(void)
 {
 	LCD_NOKIA_C100_RST_LOW;
 	//DELAY FOR 200us
-	os_delay_us(200);
+	(*LCD_NOKIA_C100_DELAY_US)(200);
 	LCD_NOKIA_C100_RST_HIGH;
 	//DELAY FOR 10MS
-	os_delay_us(10000);
+	(*LCD_NOKIA_C100_DELAY_US)(10000);
 
 	//SOFTWARE RESET
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_SWRESET);
-	os_delay_us(5000);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_SWRESET);
+	(*LCD_NOKIA_C100_DELAY_US)(5000);
 
 	//SLEEP OUT + BOOSTER ON
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_SLPOUT);
-	os_delay_us(6000);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_SLPOUT);
+	(*LCD_NOKIA_C100_DELAY_US)(6000);
 
 	//PARTIAL DISPLAY OFF
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_NORON);
-
-	os_delay_us(6000);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_NORON);
+	(*LCD_NOKIA_C100_DELAY_US)(6000);
 
 	//INTERFACE PIXEL FORMAT = RGB (5 6 5)
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_COLMOD);
-	LCD_NOKIA_C100_send_data(0x05);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_COLMOD);
+	LCD_NOKIA_C100_Send_Data(0x05);
 
 	//DISPLAY ON
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_DISPON);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_DISPON);
 
 	//SET GAMMA PROFILE
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_GAMSET);
-	LCD_NOKIA_C100_send_data(0x08);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_GAMSET);
+	LCD_NOKIA_C100_Send_Data(0x08);
 }
 
-void LCD_NOKIA_C100_send_command(uint8_t command)
+void LCD_NOKIA_C100_Send_Command(uint8_t command)
 {
-	(*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)(1, 8, 0, command);
+	(*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)((0x0100 | command), 9);
 }
 
-void LCD_NOKIA_C100_send_data(uint8_t data)
+void LCD_NOKIA_C100_Send_Data(uint8_t data)
 {
-	(*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)(1, 8, 1, data);
+	(*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)(data, 9);
 }
 
-void LCD_NOKIA_C100_set_xy_area(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end)
+void LCD_NOKIA_C100_Set_Xy_Area(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end)
 {
 	//SET THE LCD WRITING AREA (FOR RAMWR COMMAND) TO THE
 	//SPECIFIED X,Y BOUNDS
 
 	//CASET (COLS = 0 TO 131)
-	LCD_NOKIA_C100_send_command(0x2A);
-	LCD_NOKIA_C100_send_data(0x00);
-	LCD_NOKIA_C100_send_data(x_start);
-	LCD_NOKIA_C100_send_data(0x00);
-	LCD_NOKIA_C100_send_data(x_end);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_CASET);
+	LCD_NOKIA_C100_Send_Data(0x00);
+	LCD_NOKIA_C100_Send_Data(x_start);
+	LCD_NOKIA_C100_Send_Data(0x00);
+	LCD_NOKIA_C100_Send_Data(x_end);
 
 	//RASET (ROWS = 0 TO 161)
-	LCD_NOKIA_C100_send_command(0x2B);
-	LCD_NOKIA_C100_send_data(0x00);
-	LCD_NOKIA_C100_send_data(y_start);
-	LCD_NOKIA_C100_send_data(0x00);
-	LCD_NOKIA_C100_send_data(y_end);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RASET);
+	LCD_NOKIA_C100_Send_Data(0x00);
+	LCD_NOKIA_C100_Send_Data(y_start);
+	LCD_NOKIA_C100_Send_Data(0x00);
+	LCD_NOKIA_C100_Send_Data(y_end);
 }
 
-void LCD_NOKIA_C100_clear_screen(uint16_t color)
+void LCD_NOKIA_C100_Clear_Screen(uint16_t color)
 {
 	uint8_t h = (color>>8);
 	uint8_t l = (color);
 
 	//SET DRAWING AREA TO THE WHOLE SCREEN
-	LCD_NOKIA_C100_set_xy_area(0, 0, 131, 161);
+	LCD_NOKIA_C100_Set_Xy_Area(0, 0, LCD_NOKIA_C100_ROW_MAX, LCD_NOKIA_C100_COL_MAX);
 
 	//RAMWR
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_RAMWR);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
 
 	uint16_t i;
-	for(i=0; i<(132*162); i++)
+	for(i=0; i<((LCD_NOKIA_C100_ROW_MAX+1) * (LCD_NOKIA_C100_COL_MAX+1)); i++)
 	{
-		LCD_NOKIA_C100_send_data(h);
-		LCD_NOKIA_C100_send_data(l);
+		LCD_NOKIA_C100_Send_Data(h);
+		LCD_NOKIA_C100_Send_Data(l);
 	}
 }
 
@@ -131,7 +145,7 @@ void LCD_NOKIA_C100_draw_bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start,
 	LCD_NOKIA_C100_set_xy_area(0, 0, 131, 161);
 
 	//RAMWR
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_RAMWR);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
 
 	uint32_t i=0;
 	uint32_t read_address = bitmap_flash_address;
@@ -158,10 +172,10 @@ void LCD_NOKIA_C100_draw_bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start,
 			temp = (temp & 0x000000FF);
 			p4 = (uint8_t)temp;
 
-			LCD_NOKIA_C100_send_data(p1);
-			LCD_NOKIA_C100_send_data(p2);
-			LCD_NOKIA_C100_send_data(p3);
-			LCD_NOKIA_C100_send_data(p4);
+			LCD_NOKIA_C100_Send_Data(p1);
+			LCD_NOKIA_C100_Send_Data(p2);
+			LCD_NOKIA_C100_Send_Data(p3);
+			LCD_NOKIA_C100_Send_Data(p4);
 		}
 		num_1kb_blocks--;
 		read_address += 1024;
@@ -186,10 +200,10 @@ void LCD_NOKIA_C100_draw_bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start,
 		temp = (temp & 0x000000FF);
 		p4 = (uint8_t)temp;
 
-		LCD_NOKIA_C100_send_data(p1);
-		LCD_NOKIA_C100_send_data(p2);
-		LCD_NOKIA_C100_send_data(p3);
-		LCD_NOKIA_C100_send_data(p4);
+		LCD_NOKIA_C100_Send_Data(p1);
+		LCD_NOKIA_C100_Send_Data(p2);
+		LCD_NOKIA_C100_Send_Data(p3);
+		LCD_NOKIA_C100_Send_Data(p4);
 	}
 }
 
@@ -222,7 +236,7 @@ void LCD_NOKIA_C100_draw_text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 		char_start_location = font_descriptor_map[str[i]-32][2];
 		char_byte_len = font_width * font_height;
 		//RAMWR
-		LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_RAMWR);
+		LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
 
 		for(j=0; j<char_byte_len; j++)
 		{
@@ -231,96 +245,96 @@ void LCD_NOKIA_C100_draw_text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 			//BIT 7
 			if(current_byte & 0b10000000)
 			{
-				LCD_NOKIA_C100_send_data(h_color);
-				LCD_NOKIA_C100_send_data(l_color);
+				LCD_NOKIA_C100_Send_Data(h_color);
+				LCD_NOKIA_C100_Send_Data(l_color);
 			}
 			else
 			{
-				LCD_NOKIA_C100_send_data(h_bgcolor);
-				LCD_NOKIA_C100_send_data(l_bgcolor);
+				LCD_NOKIA_C100_Send_Data(h_bgcolor);
+				LCD_NOKIA_C100_Send_Data(l_bgcolor);
 			}
 
 			//BIT 6
 			if(current_byte & 0b01000000)
 			{
-				LCD_NOKIA_C100_send_data(h_color);
-				LCD_NOKIA_C100_send_data(l_color);
+				LCD_NOKIA_C100_Send_Data(h_color);
+				LCD_NOKIA_C100_Send_Data(l_color);
 			}
 			else
 			{
-				LCD_NOKIA_C100_send_data(h_bgcolor);
-				LCD_NOKIA_C100_send_data(l_bgcolor);
+				LCD_NOKIA_C100_Send_Data(h_bgcolor);
+				LCD_NOKIA_C100_Send_Data(l_bgcolor);
 			}
 
 			//BIT 5
 			if(current_byte & 0b00100000)
 			{
-				LCD_NOKIA_C100_send_data(h_color);
-				LCD_NOKIA_C100_send_data(l_color);
+				LCD_NOKIA_C100_Send_Data(h_color);
+				LCD_NOKIA_C100_Send_Data(l_color);
 			}
 			else
 			{
-				LCD_NOKIA_C100_send_data(h_bgcolor);
-				LCD_NOKIA_C100_send_data(l_bgcolor);
+				LCD_NOKIA_C100_Send_Data(h_bgcolor);
+				LCD_NOKIA_C100_Send_Data(l_bgcolor);
 			}
 
 			//BIT 4
 			if(current_byte & 0b00010000)
 			{
-				LCD_NOKIA_C100_send_data(h_color);
-				LCD_NOKIA_C100_send_data(l_color);
+				LCD_NOKIA_C100_Send_Data(h_color);
+				LCD_NOKIA_C100_Send_Data(l_color);
 			}
 			else
 			{
-				LCD_NOKIA_C100_send_data(h_bgcolor);
-				LCD_NOKIA_C100_send_data(l_bgcolor);
+				LCD_NOKIA_C100_Send_Data(h_bgcolor);
+				LCD_NOKIA_C100_Send_Data(l_bgcolor);
 			}
 
 			//BIT 3
 			if(current_byte & 0b00001000)
 			{
-				LCD_NOKIA_C100_send_data(h_color);
-				LCD_NOKIA_C100_send_data(l_color);
+				LCD_NOKIA_C100_Send_Data(h_color);
+				LCD_NOKIA_C100_Send_Data(l_color);
 			}
 			else
 			{
-				LCD_NOKIA_C100_send_data(h_bgcolor);
-				LCD_NOKIA_C100_send_data(l_bgcolor);
+				LCD_NOKIA_C100_Send_Data(h_bgcolor);
+				LCD_NOKIA_C100_Send_Data(l_bgcolor);
 			}
 
 			//BIT 2
 			if(current_byte & 0b00000100)
 			{
-				LCD_NOKIA_C100_send_data(h_color);
-				LCD_NOKIA_C100_send_data(l_color);
+				LCD_NOKIA_C100_Send_Data(h_color);
+				LCD_NOKIA_C100_Send_Data(l_color);
 			}
 			else
 			{
-				LCD_NOKIA_C100_send_data(h_bgcolor);
-				LCD_NOKIA_C100_send_data(l_bgcolor);
+				LCD_NOKIA_C100_Send_Data(h_bgcolor);
+				LCD_NOKIA_C100_Send_Data(l_bgcolor);
 			}
 
 			//BIT 1
 			if(current_byte & 0b00000010)
 			{
-				LCD_NOKIA_C100_send_data(h_color);
-				LCD_NOKIA_C100_send_data(l_color);
+				LCD_NOKIA_C100_Send_Data(h_color);
+				LCD_NOKIA_C100_Send_Data(l_color);
 			}
 			else
 			{
-				LCD_NOKIA_C100_send_data(h_bgcolor);
-				LCD_NOKIA_C100_send_data(l_bgcolor);
+				LCD_NOKIA_C100_Send_Data(h_bgcolor);
+				LCD_NOKIA_C100_Send_Data(l_bgcolor);
 			}
 			//BIT 0
 			if(current_byte & 0b00000001)
 			{
-				LCD_NOKIA_C100_send_data(h_color);
-				LCD_NOKIA_C100_send_data(l_color);
+				LCD_NOKIA_C100_Send_Data(h_color);
+				LCD_NOKIA_C100_Send_Data(l_color);
 			}
 			else
 			{
-				LCD_NOKIA_C100_send_data(h_bgcolor);
-				LCD_NOKIA_C100_send_data(l_bgcolor);
+				LCD_NOKIA_C100_Send_Data(h_bgcolor);
+				LCD_NOKIA_C100_Send_Data(l_bgcolor);
 			}
 
 		}
@@ -341,12 +355,12 @@ void LCD_NOKIA_C100_draw_filled_box(uint8_t x_start, uint8_t x_end, uint8_t y_st
 	LCD_NOKIA_C100_set_xy_area(x_start, y_start, x_end, y_end);
 
 	//RAMWR
-	LCD_NOKIA_C100_send_command(LCD_NOKIA_C100_COMMAND_RAMWR);
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
 
 	for(i=0; i<pixel_count; i++)
 	{
-		LCD_NOKIA_C100_send_data(h_color);
-		LCD_NOKIA_C100_send_data(l_color);
+		LCD_NOKIA_C100_Send_Data(h_color);
+		LCD_NOKIA_C100_Send_Data(l_color);
 	}
 }
 
