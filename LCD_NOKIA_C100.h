@@ -92,12 +92,15 @@ void LCD_NOKIA_C100_Draw_Pixel(uint8_t x, uint8_t y, uint16_t color);
 
 void LCD_NOKIA_C100_Draw_Line_Horizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t thickness, uint16_t color);
 void LCD_NOKIA_C100_Draw_Line_Vertical(uint8_t y_start, uint8_t y_end, uint8_t x, uint8_t thickness, uint16_t color);
+void LCD_NOKIA_C100_Draw_Line(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint16_t color);
 
 void LCD_NOKIA_C100_Draw_Rectangle_Outline(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t border_thickness, uint16_t color);
 void LCD_NOKIA_C100_Draw_Rectangle_Filled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t border_thickness, uint16_t color, uint16_t fill_color);
 
 void LCD_NOKIA_C100_Draw_Circle_Outline(uint8_t x_centre, uint8_t y_centre, uint8_t radius, uint8_t thickness, uint16_t color);
 void LCD_NOKIA_C100_Draw_Circle_Filled(uint8_t x_centre, uint8_t y_centre, uint8_t radius, uint8_t thickness, uint16_t color, uint16_t fill_color);
+
+void LCD_NOKIA_C100_Draw_Triangle_Outline(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3, uint16_t color);
 
 void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t y_start, uint8_t width, uint8_t height, uint16_t* bitmap_buffer);
 void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* font_map, const uint16_t (*font_descriptor_map)[3], uint8_t font_width, uint8_t font_height, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);

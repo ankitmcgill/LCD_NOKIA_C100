@@ -182,6 +182,55 @@ void LCD_NOKIA_C100_Draw_Line_Vertical(uint8_t y_start, uint8_t y_end, uint8_t x
 	}
 }
 
+void LCD_NOKIA_C100_Draw_Line(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint16_t color)
+{
+	//DRAW GENERIC LINE BETWEEN ANY 2 POINTS USING BRESENHAM ALGORITHM
+	
+	int16_t dx = x_end - x_start;
+	int16_t dy = y_end - y_start;
+	
+	if(dx < 0)
+	{
+		dx = dx * -1;
+	}
+	if(dy < 0)
+	{
+		dy = dy * -1;
+	}
+	
+	uint8_t x = x_start;
+	uint8_t y = y_start;
+	
+	int16_t e = 0;
+	
+	if(dy < dx)
+	{
+		for(x=x_start; x<=x_end; x++)
+		{
+			LCD_NOKIA_C100_Draw_Pixel(x, y, color);
+			e += dy;
+			if((e << 1) >= dx)
+			{
+				y++;
+				e -= dx;
+			}
+		}
+	}
+	else
+	{
+		for(y=y_start; y<=y_end; y++)
+		{
+			LCD_NOKIA_C100_Draw_Pixel(x, y, color);
+			e += dx;
+			if((e << 1) >= dy)
+			{
+				x++;
+				e -= dy;
+			}
+		}
+	}
+}
+
 void LCD_NOKIA_C100_Draw_Rectangle_Outline(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t border_thickness, uint16_t color)
 {
 	//DRAW A RECTANGLE OUTLINE BETWEEN THE GIVEN X AND Y BOUNDS AND SPECIFIED THICKNESS
@@ -260,12 +309,35 @@ void LCD_NOKIA_C100_Draw_Circle_Filled(uint8_t x_centre, uint8_t y_centre, uint8
 	}
 }
 
+void LCD_NOKIA_C100_Draw_Triangle_Outline(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3, uint16_t color)
+{
+	//DRAW UNFILLED TRIANGLE BETWEEN THE 3 SPECIFIED (X,Y) POINTS
+	
+	LCD_NOKIA_C100_Draw_Line(x1, y1, x2, y2, color);
+	LCD_NOKIA_C100_Draw_Line(x2, y2, x3, y3, color);
+	LCD_NOKIA_C100_Draw_Line(x3, y3, x1, y1, color);
+}
 
 void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t y_start, uint8_t width, uint8_t height, uint16_t* bitmap_buffer)
 {
 	//DRAW THE BITMAP BUFFER IMAGE STARTING FROM THE SPECIFIED TOP LEFT (X,Y) CORDINATE AND WITH SPECIFIED WIDTH AND HEIGHT
 	
+	uint8_t h,l;
 	
+	//SET X-Y DRAWING AREA
+	LCD_NOKIA_C100_Set_Xy_Area(x_start, y_start, x_start + width - 1, y_start + height - 1);
+	
+	//RAMWR
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
+	
+	for(uint32_t i=0; i<(width*height); i++)
+	{
+		h = (bitmap_buffer[i] >> 8);
+		l = (bitmap_buffer[i]);
+		
+		LCD_NOKIA_C100_Send_Data(h);
+		LCD_NOKIA_C100_Send_Data(l);
+	}
 }
 
 void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* font_map, const uint16_t (*font_descriptor_map)[3], uint8_t font_width, uint8_t font_height, char* str, uint8_t len, uint16_t color, uint16_t bgcolor)
