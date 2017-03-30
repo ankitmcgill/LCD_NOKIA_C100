@@ -4,6 +4,11 @@
 *
 * 132 x 162 TFT LCD COLOR
 * EACH PIXEL IS R(5) - G(6) - B(5)
+*
+* NOTE: BECAUSE THE NOKIA LCD MODULES WE GET FROM CHINA ARE
+*				OF CHEAP QUALITY, LINES / PIXELS DRAWN ON THE LCD
+*				EDGES (ROW = 0 OR 161, COL = 0 OR 131) MAY NOT SHOW
+*				PROPERLY AS THE LCD BEZEL MIGHT BE COVERING THE EDGES
 * 
 * MARCH 27 2017
 * ANKIT BHATNAGAR
@@ -71,12 +76,12 @@ void LCD_NOKIA_C100_Init(void)
 
 void LCD_NOKIA_C100_Send_Command(uint8_t command)
 {
-	(*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)((0x0100 | command), 9);
+	(*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)(command, 9);
 }
 
 void LCD_NOKIA_C100_Send_Data(uint8_t data)
 {
-	(*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)(data, 9);
+	(*LCD_NOKIA_C100_SPI_SEND_FUNCTION_POINTER)((0x0100 | data), 9);
 }
 
 void LCD_NOKIA_C100_Set_Xy_Area(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end)
@@ -118,152 +123,162 @@ void LCD_NOKIA_C100_Clear_Screen(uint16_t color)
 	}
 }
 
+void LCD_NOKIA_C100_Draw_Pixel(uint8_t x, uint8_t y, uint16_t color)
+{
+	//SET THE SPECIFIED PIXEL WITH THE SPECIFIED COLOR
+	
+	//SET DRAWING AREA
+	LCD_NOKIA_C100_Set_Xy_Area(x, y, x + 1, y + 1);
+	
+	//RAMWR
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
+	
+	uint8_t h = (color>>8);
+	uint8_t l = (color);
+	
+	LCD_NOKIA_C100_Send_Data(h);
+	LCD_NOKIA_C100_Send_Data(l);
+}
+
 void LCD_NOKIA_C100_Draw_Line_Horizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t thickness, uint16_t color)
 {
 	//DRAW A HORIZONTAL LINE STARTING AT X_START, Y WITH THE THICKNESS SPECIFIED
+	//IN THE BOTTOM (X) DIRECTION
 
-	LCD_NOKIA_C100_Draw_Rectangle_Filled(x_start, x_end, y, y + thickness, color);
+	//SET DRAWING AREA
+	LCD_NOKIA_C100_Set_Xy_Area(x_start, y, x_end, y + thickness - 1);
+	
+	//RAMWR
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
+	
+	uint8_t h = (color>>8);
+	uint8_t l = (color);
+	
+	for(uint16_t i=0; i<(x_end - x_start + 1)*(thickness); i++)
+	{
+		LCD_NOKIA_C100_Send_Data(h);
+		LCD_NOKIA_C100_Send_Data(l);
+	}
 }
 
-void LCD_NOKIA_C100_Draw_Line_Vertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t thickness, uint16_t color)
+void LCD_NOKIA_C100_Draw_Line_Vertical(uint8_t y_start, uint8_t y_end, uint8_t x, uint8_t thickness, uint16_t color)
 {
 	//DRAW A VERTICAL LINE STARTING AT X, Y_START WITH THE THICKNESS SPECIFIED
-
-	LCD_NOKIA_C100_Draw_Rectangle_Filled(x, x + thickness, y_start, y_end, color);
-}
-
-void LCD_NOKIA_C100_Draw_Rectangle_Outline(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint8_t border_size, uint16_t color)
-{
-	//DRAW A BOX OUTLINE BETWEEN THE GIVEN X AND Y BOUNDS AND
-	//AND OUTLINE WITH THE SPECIFIED COLOR
-
-	LCD_NOKIA_C100_Draw_Rectangle_Filled(x_start, x_end, y_start, y_end, color);
-	LCD_NOKIA_C100_Draw_Rectangle_Filled(x_start + border_size, x_end - border_size, y_start + border_size, y_end - border_size, LCD_NOKIA_C100_COLOR_BLACK);
-}
-
-void LCD_NOKIA_C100_Draw_Rectangle_Filled(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint16_t color)
-{
-	//DRAW A BOX BETWEEN THE GIVEN X AND Y BOUNDS AND
-	//FILL IT WITH THE SUPPLIED COLOR
-
-	uint8_t h_color = (color>>8);
-	uint8_t l_color = (color);
-	uint16_t pixel_count = (x_end - x_start + 1) * (y_end - y_start + 1);
-	uint16_t i;
-
-	LCD_NOKIA_C100_Set_Xy_Area(x_start, y_start, x_end, y_end);
-
+	//IN THE RIGHT (Y) DIRECTION
+	
+	//SET DRAWING AREA
+	LCD_NOKIA_C100_Set_Xy_Area(x, y_start, x + thickness - 1, y_end);
+	
 	//RAMWR
 	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
-
-	for(i=0; i<pixel_count; i++)
+	
+	uint8_t h = (color>>8);
+	uint8_t l = (color);
+	
+	for(uint16_t i=0; i<(y_end - y_start + 1)*(thickness); i++)
 	{
-		LCD_NOKIA_C100_Send_Data(h_color);
-		LCD_NOKIA_C100_Send_Data(l_color);
+		LCD_NOKIA_C100_Send_Data(h);
+		LCD_NOKIA_C100_Send_Data(l);
+	}
+}
+
+void LCD_NOKIA_C100_Draw_Rectangle_Outline(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t border_thickness, uint16_t color)
+{
+	//DRAW A RECTANGLE OUTLINE BETWEEN THE GIVEN X AND Y BOUNDS AND SPECIFIED THICKNESS
+	//WITH THE SPECIFIED COLOR. THE THICKNESS OF THE RECTANGLE IS INWARDS
+	
+	LCD_NOKIA_C100_Draw_Line_Vertical(y_start, y_end, x_start, border_thickness, color);
+	LCD_NOKIA_C100_Draw_Line_Vertical(y_start, y_end, (x_end - border_thickness + 1), border_thickness, color);
+	LCD_NOKIA_C100_Draw_Line_Horizontal(x_start, x_end, y_start, border_thickness, color);
+	LCD_NOKIA_C100_Draw_Line_Horizontal(x_start, x_end, (y_end - border_thickness + 1), border_thickness, color);
+}
+
+void LCD_NOKIA_C100_Draw_Rectangle_Filled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t border_thickness, uint16_t color, uint16_t fill_color)
+{
+	//DRAW A RECTANGLE OUTLINE BETWEEN THE GIVEN X AND Y BOUNDS AND SPECIFIED THICKNESS
+	//WITH THE SPECIFIED COLOR. THE THICKNESS OF THE RECTANGLE IS INWARDS. FILL THE RECTANGLE WITH SPECIFIED COLOR
+	
+	LCD_NOKIA_C100_Draw_Rectangle_Outline(x_start, y_start, x_end, y_end, border_thickness, color);
+	
+	LCD_NOKIA_C100_Set_Xy_Area(x_start + border_thickness, y_start + border_thickness, x_end - border_thickness, y_end - border_thickness);
+	
+	//RAMWR
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
+	
+	uint8_t h = (fill_color>>8);
+	uint8_t l = (fill_color);
+	
+	for(uint16_t i=0; i<(y_end - y_start - (2 * border_thickness) + 1)*(x_end - x_start - (2 * border_thickness) + 1); i++)
+	{
+		LCD_NOKIA_C100_Send_Data(h);
+		LCD_NOKIA_C100_Send_Data(l);
 	}
 }
 
 
-void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint32_t bitmap_flash_address, uint32_t bitmap_size_bytes)
+void LCD_NOKIA_C100_Draw_Circle_Outline(uint8_t x_centre, uint8_t y_centre, uint8_t radius, uint8_t thickness, uint16_t color)
 {
-	//DRAW THE BITMAP IMAGE FROM THE SPECIFIED ARRAY (AND GIVEN SIZE)
-	//BETWEEN THE SPECIFIED X AND Y CONSTRAINTS
+	//DRAW CIRCLE OF SPECIFIED THICKNESS AT SPECIFIED CENTRE WITH SPECIFIED RADIUS
+	
+	int8_t x, y;
 
-	uint32_t buffer[256];
-	uint8_t p1, p2, p3, p4;
-	uint32_t num_1kb_blocks;
-	uint32_t num_remaining_bytes;
-
-	num_1kb_blocks = bitmap_size_bytes / 1024;
-	if(num_1kb_blocks == 0)
+	for(y=(-radius - thickness); y<=(radius + thickness); y++)
 	{
-		//SIZE LESS THAN 1024 BYTES
-		num_remaining_bytes = bitmap_size_bytes;
-	}
-	else
-	{
-		num_remaining_bytes = bitmap_size_bytes % 1024;
-	}
-
-	LCD_NOKIA_C100_Clear_Screen(LCD_NOKIA_C100_COLOR_BLACK);
-
-	//SET DRAWING AREA TO THE WHOLE SCREEN
-	LCD_NOKIA_C100_Set_Xy_Area(0, 0, LCD_NOKIA_C100_ROW_MAX, LCD_NOKIA_C100_COL_MAX);
-
-	//RAMWR
-	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
-
-	uint32_t i=0;
-	uint32_t read_address = bitmap_flash_address;
-	int32_t temp;
-
-	while(num_1kb_blocks != 0)
-	{
-		ESP8266_FLASH_read(read_address, buffer, 1024);
-		for(i=0; i<256; i++)
+		for(x=(-radius - thickness); x<=(radius + thickness); x++)
 		{
-			temp = buffer[i];
-			temp = (temp & 0xFF000000) >> 24;
-			p1 = (uint8_t)temp;
-
-			temp = buffer[i];
-			temp = (temp & 0x00FF0000) >> 16;
-			p2 = (uint8_t)temp;
-
-			temp = buffer[i];
-			temp = (temp & 0x0000FF00) >> 8;
-			p3 = (uint8_t)temp;
-
-			temp = buffer[i];
-			temp = (temp & 0x000000FF);
-			p4 = (uint8_t)temp;
-
-			LCD_NOKIA_C100_Send_Data(p1);
-			LCD_NOKIA_C100_Send_Data(p2);
-			LCD_NOKIA_C100_Send_Data(p3);
-			LCD_NOKIA_C100_Send_Data(p4);
+			if((x*x)+(y*y) < (radius*radius))
+			{
+				//DO NOTHING
+			}
+			else if((x*x)+(y*y) < ((radius + thickness)*(radius + thickness)))
+			{
+				LCD_NOKIA_C100_Draw_Pixel(x_centre + x, y_centre + y, color);
+			}
 		}
-		num_1kb_blocks--;
-		read_address += 1024;
 	}
-	//READ THE REMAINING BYTES (LESS THAN 1024)
-	ESP8266_FLASH_read(read_address, buffer, 1024);
-	for(i=0; i<(num_remaining_bytes/4); i++)
+}
+
+void LCD_NOKIA_C100_Draw_Circle_Filled(uint8_t x_centre, uint8_t y_centre, uint8_t radius, uint8_t thickness, uint16_t color, uint16_t fill_color)
+{
+	//DRAW CIRCLE OF SPECIFIED THICKNESS AT SPECIFIED CENTRE WITH SPECIFIED RADIUS AND FILL WITH SPECIFIED COLOR
+	
+	int8_t x, y;
+
+	for(y=(-radius - thickness); y<=(radius + thickness); y++)
 	{
-		temp = buffer[i];
-		temp = (temp & 0xFF000000) >> 24;
-		p1 = (uint8_t)temp;
-
-		temp = buffer[i];
-		temp = (temp & 0x00FF0000) >> 16;
-		p2 = (uint8_t)temp;
-
-		temp = buffer[i];
-		temp = (temp & 0x0000FF00) >> 8;
-		p3 = (uint8_t)temp;
-
-		temp = buffer[i];
-		temp = (temp & 0x000000FF);
-		p4 = (uint8_t)temp;
-
-		LCD_NOKIA_C100_Send_Data(p1);
-		LCD_NOKIA_C100_Send_Data(p2);
-		LCD_NOKIA_C100_Send_Data(p3);
-		LCD_NOKIA_C100_Send_Data(p4);
+		for(x=(-radius - thickness); x<=(radius + thickness); x++)
+		{
+			if((x*x)+(y*y) < (radius*radius))
+			{
+				LCD_NOKIA_C100_Draw_Pixel(x_centre + x, y_centre + y, fill_color);
+			}
+			else if((x*x)+(y*y) < ((radius + thickness)*(radius + thickness)))
+			{
+				LCD_NOKIA_C100_Draw_Pixel(x_centre + x, y_centre + y, color);
+			}
+		}
 	}
+}
+
+
+void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t y_start, uint8_t width, uint8_t height, uint16_t* bitmap_buffer)
+{
+	//DRAW THE BITMAP BUFFER IMAGE STARTING FROM THE SPECIFIED TOP LEFT (X,Y) CORDINATE AND WITH SPECIFIED WIDTH AND HEIGHT
+	
+	
 }
 
 void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* font_map, const uint16_t (*font_descriptor_map)[3], uint8_t font_width, uint8_t font_height, char* str, uint8_t len, uint16_t color, uint16_t bgcolor)
 {
 	//DRAW THE SPECIFIED STRING IN THE SPECIFIED FONT AT THE
 	//SPECIFIED TOP LEFT STARTING LOCATION
-	//FONT_MAP    : POINTER TO FONT MAPPING ARRAY (MAKE SURE TO ADD ALL SYMBOLS IN THE DOCT FACTORY
+	//FONT_MAP    : POINTER TO FONT MAPPING ARRAY (MAKE SURE TO ADD ALL SYMBOLS IN THE DOT FACTORY
 	//FONT_DESCRIPTOR_MAP : CONTAINS THE WIDTH, HEIGHT AND OFFSET OF CHARACTERS IN THE MAIN FONT MAP ARRAY
 	//FONT_WIDTH  : FONT CHARACTER WIDTH IN BYTES
 	//FONT_HEIGHT : FONT CHARACTER HEIGHT IN BYTES
 	//LEN         : THE LENGTH OF THE STRING TO BE DRAWN
 	//COLOR		  	: THE COLOR TO DRAW THE STRING IN
-
+	
 	uint8_t h_color = (color>>8);
 	uint8_t l_color = (color);
 	uint8_t h_bgcolor = (bgcolor >> 8);
@@ -289,7 +304,7 @@ void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 			current_byte = font_map[char_start_location + j];
 
 			//BIT 7
-			if(current_byte & 0b10000000)
+			if(current_byte & 0x80)
 			{
 				LCD_NOKIA_C100_Send_Data(h_color);
 				LCD_NOKIA_C100_Send_Data(l_color);
@@ -301,7 +316,7 @@ void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 			}
 
 			//BIT 6
-			if(current_byte & 0b01000000)
+			if(current_byte & 0x40)
 			{
 				LCD_NOKIA_C100_Send_Data(h_color);
 				LCD_NOKIA_C100_Send_Data(l_color);
@@ -313,7 +328,7 @@ void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 			}
 
 			//BIT 5
-			if(current_byte & 0b00100000)
+			if(current_byte & 0x20)
 			{
 				LCD_NOKIA_C100_Send_Data(h_color);
 				LCD_NOKIA_C100_Send_Data(l_color);
@@ -325,7 +340,7 @@ void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 			}
 
 			//BIT 4
-			if(current_byte & 0b00010000)
+			if(current_byte & 0x10)
 			{
 				LCD_NOKIA_C100_Send_Data(h_color);
 				LCD_NOKIA_C100_Send_Data(l_color);
@@ -337,7 +352,7 @@ void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 			}
 
 			//BIT 3
-			if(current_byte & 0b00001000)
+			if(current_byte & 0x08)
 			{
 				LCD_NOKIA_C100_Send_Data(h_color);
 				LCD_NOKIA_C100_Send_Data(l_color);
@@ -349,7 +364,7 @@ void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 			}
 
 			//BIT 2
-			if(current_byte & 0b00000100)
+			if(current_byte & 0x04)
 			{
 				LCD_NOKIA_C100_Send_Data(h_color);
 				LCD_NOKIA_C100_Send_Data(l_color);
@@ -361,7 +376,7 @@ void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 			}
 
 			//BIT 1
-			if(current_byte & 0b00000010)
+			if(current_byte & 0x02)
 			{
 				LCD_NOKIA_C100_Send_Data(h_color);
 				LCD_NOKIA_C100_Send_Data(l_color);
@@ -372,7 +387,7 @@ void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 				LCD_NOKIA_C100_Send_Data(l_bgcolor);
 			}
 			//BIT 0
-			if(current_byte & 0b00000001)
+			if(current_byte & 0x01)
 			{
 				LCD_NOKIA_C100_Send_Data(h_color);
 				LCD_NOKIA_C100_Send_Data(l_color);
@@ -387,3 +402,77 @@ void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* f
 	}
 }
 
+void LCD_NOKIA_C100_Draw_EBU_Test_Pattern(void)
+{
+	/*
+	EBU Test Pattern
+	1, 1, 1: White
+	1, 1, 0: Yellow
+	0, 1, 1: Cyan
+	0, 1, 0: Green
+	1, 0, 1: Magenta
+	1, 0, 0: Red
+	0, 0, 1: Blue
+	0, 0, 0: Black
+
+	8 bars => for each bar cols = 162, rows = 132/8 = 16 => 4 rows remaining (black)
+	*/
+  
+	uint8_t temp = 0;
+  uint16_t i;
+  
+	LCD_NOKIA_C100_Send_Command(0x2C);	//RAMWR
+  
+	for(i=0; i<((LCD_NOKIA_C100_ROW_MAX + 1)*(LCD_NOKIA_C100_COL_MAX + 1)); i++)
+	{
+		temp = i/2640;
+
+		switch(temp)
+		{
+			case 0:	//White
+					LCD_NOKIA_C100_Send_Data(0xFF);
+					LCD_NOKIA_C100_Send_Data(0xFF);
+					break;
+			
+			case 1:	//Yellow
+					LCD_NOKIA_C100_Send_Data(0xFF);
+					LCD_NOKIA_C100_Send_Data(0xE0);
+					break;
+			
+			case 2:	//Cyan
+					LCD_NOKIA_C100_Send_Data(0x07);
+					LCD_NOKIA_C100_Send_Data(0xFF);
+					break;
+
+			case 3:	//green
+					LCD_NOKIA_C100_Send_Data(0x07);
+					LCD_NOKIA_C100_Send_Data(0xE0);
+					break;
+
+			case 4:	//magenta
+					LCD_NOKIA_C100_Send_Data(0xF8);
+					LCD_NOKIA_C100_Send_Data(0x1F);
+					break;
+			
+			case 5:	//red
+					LCD_NOKIA_C100_Send_Data(0xF8);
+					LCD_NOKIA_C100_Send_Data(0x00);
+					break;
+
+			case 6:	//blue
+					LCD_NOKIA_C100_Send_Data(0x00);
+					LCD_NOKIA_C100_Send_Data(0x1F);
+					break;
+
+			case 7:	//black
+					LCD_NOKIA_C100_Send_Data(0x00);
+					LCD_NOKIA_C100_Send_Data(0x00);
+					break;
+			
+			case 8:	//black
+					LCD_NOKIA_C100_Send_Data(0x00);
+					LCD_NOKIA_C100_Send_Data(0x00);
+					break;
+		}
+	}
+}

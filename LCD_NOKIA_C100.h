@@ -4,6 +4,11 @@
 *
 * 132 x 162 TFT LCD COLOR
 * EACH PIXEL IS R(5) - G(6) - B(5)
+*
+* NOTE: BECAUSE THE NOKIA LCD MODULES WE GET FROM CHINA ARE
+*				OF CHEAP QUALITY, LINES / PIXELS DRAWN ON THE LCD
+*				EDGES (ROW = 0 OR 161, COL = 0 OR 131) MAY NOT SHOW
+*				PROPERLY AS THE LCD BEZEL MIGHT BE COVERING THE EDGES
 * 
 * MARCH 27 2017
 * ANKIT BHATNAGAR
@@ -24,7 +29,7 @@
 #endif
 
 #define LCD_NOKIA_C100_RST_PIN_PORT	GPIOA
-#define LCD_NOKIA_C100_RST_PIN_NUM	GPIO_Pin_0
+#define LCD_NOKIA_C100_RST_PIN_NUM	GPIO_Pin_12
 
 #define LCD_NOKIA_C100_RST_LOW  GPIO_ResetBits(LCD_NOKIA_C100_RST_PIN_PORT, LCD_NOKIA_C100_RST_PIN_NUM)
 #define LCD_NOKIA_C100_RST_HIGH GPIO_SetBits(LCD_NOKIA_C100_RST_PIN_PORT, LCD_NOKIA_C100_RST_PIN_NUM)
@@ -83,15 +88,20 @@ void LCD_NOKIA_C100_Send_Data(uint8_t data);
 void LCD_NOKIA_C100_Set_Xy_Area(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end);
 void LCD_NOKIA_C100_Clear_Screen(uint16_t color);
 
+void LCD_NOKIA_C100_Draw_Pixel(uint8_t x, uint8_t y, uint16_t color);
+
 void LCD_NOKIA_C100_Draw_Line_Horizontal(uint8_t x_start, uint8_t x_end, uint8_t y, uint8_t thickness, uint16_t color);
-void LCD_NOKIA_C100_Draw_Line_Vertical(uint8_t x, uint8_t y_start, uint8_t y_end, uint8_t thickness, uint16_t color);
+void LCD_NOKIA_C100_Draw_Line_Vertical(uint8_t y_start, uint8_t y_end, uint8_t x, uint8_t thickness, uint16_t color);
 
-void LCD_NOKIA_C100_Draw_Rectangle_Outline(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint8_t border_size, uint16_t color);
-void LCD_NOKIA_C100_Draw_Rectangle_Filled(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint16_t color);
+void LCD_NOKIA_C100_Draw_Rectangle_Outline(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t border_thickness, uint16_t color);
+void LCD_NOKIA_C100_Draw_Rectangle_Filled(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end, uint8_t border_thickness, uint16_t color, uint16_t fill_color);
 
-void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t x_end, uint8_t y_start, uint8_t y_end, uint32_t bitmap_flash_address, uint32_t bitmap_size_bytes);
+void LCD_NOKIA_C100_Draw_Circle_Outline(uint8_t x_centre, uint8_t y_centre, uint8_t radius, uint8_t thickness, uint16_t color);
+void LCD_NOKIA_C100_Draw_Circle_Filled(uint8_t x_centre, uint8_t y_centre, uint8_t radius, uint8_t thickness, uint16_t color, uint16_t fill_color);
+
+void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t y_start, uint8_t width, uint8_t height, uint16_t* bitmap_buffer);
 void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* font_map, const uint16_t (*font_descriptor_map)[3], uint8_t font_width, uint8_t font_height, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);
 
-
+void LCD_NOKIA_C100_Draw_EBU_Test_Pattern(void);
 
 #endif
