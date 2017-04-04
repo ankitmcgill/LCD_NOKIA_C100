@@ -18,7 +18,11 @@
 #ifndef _LCD_NOKIA_C100_H_
 #define _LCD_NOKIA_C100_H_
 
+//LIBRARY MODE (PORTRAIT / LANDSCAPE)
+#define LCD_NOKIA_C100_MODE_LANDSCAPE
+
 #include <stdint.h>
+#include "FONT_INFO.h"
 #if defined(STM32F072)
 	#include "stm32f07x.h"
 	#include "stm32f07x_gpio.h"
@@ -34,8 +38,15 @@
 #define LCD_NOKIA_C100_RST_LOW  GPIO_ResetBits(LCD_NOKIA_C100_RST_PIN_PORT, LCD_NOKIA_C100_RST_PIN_NUM)
 #define LCD_NOKIA_C100_RST_HIGH GPIO_SetBits(LCD_NOKIA_C100_RST_PIN_PORT, LCD_NOKIA_C100_RST_PIN_NUM)
 
-#define LCD_NOKIA_C100_ROW_MAX	131
-#define LCD_NOKIA_C100_COL_MAX	161
+#if defined(LCD_NOKIA_C100_MODE_PORTRAIT)
+	#define LCD_NOKIA_C100_COL_MAX	131
+	#define LCD_NOKIA_C100_ROW_MAX	161
+#endif
+
+#if defined(LCD_NOKIA_C100_MODE_LANDSCAPE)
+	#define LCD_NOKIA_C100_COL_MAX	161
+	#define LCD_NOKIA_C100_ROW_MAX	131
+#endif
 
 //LCD COMMAND DEFINES
 #define LCD_NOKIA_C100_COMMAND_NOP			0x00
@@ -102,8 +113,9 @@ void LCD_NOKIA_C100_Draw_Circle_Filled(uint8_t x_centre, uint8_t y_centre, uint8
 
 void LCD_NOKIA_C100_Draw_Triangle_Outline(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3, uint16_t color);
 
-void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t y_start, uint8_t width, uint8_t height, uint16_t* bitmap_buffer);
-void LCD_NOKIA_C100_Draw_Text(uint8_t x_start, uint8_t y_start, const uint8_t* font_map, const uint16_t (*font_descriptor_map)[3], uint8_t font_width, uint8_t font_height, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);
+void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t y_start, uint8_t width, uint8_t height, uint32_t data_len, uint8_t* bitmap_buffer);
+void LCD_NOKIA_C100_Draw_Text_Fixedwidth(uint8_t x_start, uint8_t y_start, FONT_INFO f_info, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);
+void LCD_NOKIA_C100_Draw_Text_VariableWidth(uint8_t x_start, uint8_t y_start, FONT_INFO f_info, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);
 
 void LCD_NOKIA_C100_Draw_EBU_Test_Pattern(void);
 
