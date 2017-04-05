@@ -340,6 +340,126 @@ void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t y_start, uint8_t width,
 	}
 }
 
+void LCD_NOKIA_C100_Draw_Character(uint8_t x_start, uint8_t y_start, FONT_INFO f_info, uint8_t c, uint16_t color, uint16_t bgcolor)
+{
+	//DRAW THE SPECIFIED CHARACTER IN THE SPECIFIED FONT AT THE SPECIFIED TOP LEFT STARTING LOCATION
+	
+	uint8_t h_color = (color>>8);
+	uint8_t l_color = (color);
+	uint8_t h_bgcolor = (bgcolor >> 8);
+	uint8_t l_bgcolor = (bgcolor);
+	
+	//SET THE CHARACTER BOUNDS
+	LCD_NOKIA_C100_Set_Xy_Area(x_start, y_start, x_start + ((f_info.font_char_descriptors[c-32][0]) * 8)-1, y_start + f_info.font_char_descriptors[c-32][1]);
+	
+	//GET CHARACTER PARAMETERS
+	uint32_t char_start_location = f_info.font_char_descriptors[c-32][2];
+	uint16_t char_byte_len = f_info.font_char_descriptors[c-32][0] * f_info.font_char_descriptors[c-32][1];
+	
+	//RAMWR
+	LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
+	
+	for(uint16_t j=0; j<char_byte_len; j++)
+	{
+		uint8_t current_byte = f_info.font_bitmap[char_start_location + j];
+
+		//BIT 7
+		if(current_byte & 0x80)
+		{
+			LCD_NOKIA_C100_Send_Data(h_color);
+			LCD_NOKIA_C100_Send_Data(l_color);
+		}
+		else
+		{
+			LCD_NOKIA_C100_Send_Data(h_bgcolor);
+			LCD_NOKIA_C100_Send_Data(l_bgcolor);
+		}
+
+		//BIT 6
+		if(current_byte & 0x40)
+		{
+			LCD_NOKIA_C100_Send_Data(h_color);
+			LCD_NOKIA_C100_Send_Data(l_color);
+		}
+		else
+		{
+			LCD_NOKIA_C100_Send_Data(h_bgcolor);
+			LCD_NOKIA_C100_Send_Data(l_bgcolor);
+		}
+
+		//BIT 5
+		if(current_byte & 0x20)
+		{
+			LCD_NOKIA_C100_Send_Data(h_color);
+			LCD_NOKIA_C100_Send_Data(l_color);
+		}
+		else
+		{
+			LCD_NOKIA_C100_Send_Data(h_bgcolor);
+			LCD_NOKIA_C100_Send_Data(l_bgcolor);
+		}
+
+		//BIT 4
+		if(current_byte & 0x10)
+		{
+			LCD_NOKIA_C100_Send_Data(h_color);
+			LCD_NOKIA_C100_Send_Data(l_color);
+		}
+		else
+		{
+			LCD_NOKIA_C100_Send_Data(h_bgcolor);
+			LCD_NOKIA_C100_Send_Data(l_bgcolor);
+		}
+
+		//BIT 3
+		if(current_byte & 0x08)
+		{
+			LCD_NOKIA_C100_Send_Data(h_color);
+			LCD_NOKIA_C100_Send_Data(l_color);
+		}
+		else
+		{
+			LCD_NOKIA_C100_Send_Data(h_bgcolor);
+			LCD_NOKIA_C100_Send_Data(l_bgcolor);
+		}
+
+		//BIT 2
+		if(current_byte & 0x04)
+		{
+			LCD_NOKIA_C100_Send_Data(h_color);
+			LCD_NOKIA_C100_Send_Data(l_color);
+		}
+		else
+		{
+			LCD_NOKIA_C100_Send_Data(h_bgcolor);
+			LCD_NOKIA_C100_Send_Data(l_bgcolor);
+		}
+
+		//BIT 1
+		if(current_byte & 0x02)
+		{
+			LCD_NOKIA_C100_Send_Data(h_color);
+			LCD_NOKIA_C100_Send_Data(l_color);
+		}
+		else
+		{
+			LCD_NOKIA_C100_Send_Data(h_bgcolor);
+			LCD_NOKIA_C100_Send_Data(l_bgcolor);
+		}
+		//BIT 0
+		if(current_byte & 0x01)
+		{
+			LCD_NOKIA_C100_Send_Data(h_color);
+			LCD_NOKIA_C100_Send_Data(l_color);
+		}
+		else
+		{
+			LCD_NOKIA_C100_Send_Data(h_bgcolor);
+			LCD_NOKIA_C100_Send_Data(l_bgcolor);
+		}
+	}
+}
+
 void LCD_NOKIA_C100_Draw_Text_Fixedwidth(uint8_t x_start, uint8_t y_start, FONT_INFO f_info, char* str, uint8_t len, uint16_t color, uint16_t bgcolor)
 {
 	//DRAW THE SPECIFIED STRING IN THE SPECIFIED FONT AT THE SPECIFIED TOP LEFT STARTING LOCATION
@@ -348,128 +468,10 @@ void LCD_NOKIA_C100_Draw_Text_Fixedwidth(uint8_t x_start, uint8_t y_start, FONT_
 	//LEN         : THE LENGTH OF THE STRING TO BE DRAWN
 	//COLOR		  	: THE COLOR TO DRAW THE STRING IN
 	//BGCOLOR			: BACKGROUND COLOR OF THE TEXT
-	
-	uint8_t h_color = (color>>8);
-	uint8_t l_color = (color);
-	uint8_t h_bgcolor = (bgcolor >> 8);
-	uint8_t l_bgcolor = (bgcolor);
 
-	uint8_t i, current_byte;
-	uint16_t j;
-	uint32_t char_start_location;
-	uint16_t char_byte_len = f_info.font_char_descriptors[0][0] * f_info.font_char_descriptors[0][1];
-
-	for(i=0; i<len; i++)
+	for(uint8_t i=0; i<len; i++)
 	{
-		//SET THE CHARACTER BOUNDS
-		LCD_NOKIA_C100_Set_Xy_Area(x_start, y_start, x_start + ((f_info.font_char_descriptors[str[i]-32][0]) * 8)-1, y_start + f_info.font_char_descriptors[str[i]-32][1]);
-		
-		//GET CHARACTER PARAMETERS
-		char_start_location = f_info.font_char_descriptors[str[i]-32][2];
-		char_byte_len = f_info.font_char_descriptors[str[i]-32][0] * f_info.font_char_descriptors[str[i]-32][1];
-		
-		//RAMWR
-		LCD_NOKIA_C100_Send_Command(LCD_NOKIA_C100_COMMAND_RAMWR);
-
-		for(j=0; j<char_byte_len; j++)
-		{
-			current_byte = f_info.font_bitmap[char_start_location + j];
-
-			//BIT 7
-			if(current_byte & 0x80)
-			{
-				LCD_NOKIA_C100_Send_Data(h_color);
-				LCD_NOKIA_C100_Send_Data(l_color);
-			}
-			else
-			{
-				LCD_NOKIA_C100_Send_Data(h_bgcolor);
-				LCD_NOKIA_C100_Send_Data(l_bgcolor);
-			}
-
-			//BIT 6
-			if(current_byte & 0x40)
-			{
-				LCD_NOKIA_C100_Send_Data(h_color);
-				LCD_NOKIA_C100_Send_Data(l_color);
-			}
-			else
-			{
-				LCD_NOKIA_C100_Send_Data(h_bgcolor);
-				LCD_NOKIA_C100_Send_Data(l_bgcolor);
-			}
-
-			//BIT 5
-			if(current_byte & 0x20)
-			{
-				LCD_NOKIA_C100_Send_Data(h_color);
-				LCD_NOKIA_C100_Send_Data(l_color);
-			}
-			else
-			{
-				LCD_NOKIA_C100_Send_Data(h_bgcolor);
-				LCD_NOKIA_C100_Send_Data(l_bgcolor);
-			}
-
-			//BIT 4
-			if(current_byte & 0x10)
-			{
-				LCD_NOKIA_C100_Send_Data(h_color);
-				LCD_NOKIA_C100_Send_Data(l_color);
-			}
-			else
-			{
-				LCD_NOKIA_C100_Send_Data(h_bgcolor);
-				LCD_NOKIA_C100_Send_Data(l_bgcolor);
-			}
-
-			//BIT 3
-			if(current_byte & 0x08)
-			{
-				LCD_NOKIA_C100_Send_Data(h_color);
-				LCD_NOKIA_C100_Send_Data(l_color);
-			}
-			else
-			{
-				LCD_NOKIA_C100_Send_Data(h_bgcolor);
-				LCD_NOKIA_C100_Send_Data(l_bgcolor);
-			}
-
-			//BIT 2
-			if(current_byte & 0x04)
-			{
-				LCD_NOKIA_C100_Send_Data(h_color);
-				LCD_NOKIA_C100_Send_Data(l_color);
-			}
-			else
-			{
-				LCD_NOKIA_C100_Send_Data(h_bgcolor);
-				LCD_NOKIA_C100_Send_Data(l_bgcolor);
-			}
-
-			//BIT 1
-			if(current_byte & 0x02)
-			{
-				LCD_NOKIA_C100_Send_Data(h_color);
-				LCD_NOKIA_C100_Send_Data(l_color);
-			}
-			else
-			{
-				LCD_NOKIA_C100_Send_Data(h_bgcolor);
-				LCD_NOKIA_C100_Send_Data(l_bgcolor);
-			}
-			//BIT 0
-			if(current_byte & 0x01)
-			{
-				LCD_NOKIA_C100_Send_Data(h_color);
-				LCD_NOKIA_C100_Send_Data(l_color);
-			}
-			else
-			{
-				LCD_NOKIA_C100_Send_Data(h_bgcolor);
-				LCD_NOKIA_C100_Send_Data(l_bgcolor);
-			}
-		}
+		LCD_NOKIA_C100_Draw_Character(x_start, y_start, f_info, str[i], color, bgcolor);
 		x_start += (f_info.font_char_descriptors[str[i]-32][0] * 8);
 	}
 }

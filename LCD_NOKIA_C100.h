@@ -114,6 +114,7 @@ void LCD_NOKIA_C100_Draw_Circle_Filled(uint8_t x_centre, uint8_t y_centre, uint8
 void LCD_NOKIA_C100_Draw_Triangle_Outline(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3, uint16_t color);
 
 void LCD_NOKIA_C100_Draw_Bitmap(uint8_t x_start, uint8_t y_start, uint8_t width, uint8_t height, uint32_t data_len, uint8_t* bitmap_buffer);
+void LCD_NOKIA_C100_Draw_Character(uint8_t x_start, uint8_t y_start, FONT_INFO f_info, uint8_t c, uint16_t color, uint16_t bgcolor); 
 void LCD_NOKIA_C100_Draw_Text_Fixedwidth(uint8_t x_start, uint8_t y_start, FONT_INFO f_info, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);
 void LCD_NOKIA_C100_Draw_Text_VariableWidth(uint8_t x_start, uint8_t y_start, FONT_INFO f_info, char* str, uint8_t len, uint16_t color, uint16_t bgcolor);
 
