@@ -126,6 +126,10 @@ void LCD_NOKIA_C100_Clear_Screen(uint16_t color)
 		LCD_NOKIA_C100_Send_Data(h);
 		LCD_NOKIA_C100_Send_Data(l);
 	}
+	
+	//RESET CURSOR BACK TO 0,0
+	//SET DRAWING AREA TO THE WHOLE SCREEN
+	LCD_NOKIA_C100_Set_Xy_Area(0, 0, LCD_NOKIA_C100_COL_MAX, LCD_NOKIA_C100_ROW_MAX);
 }
 
 void LCD_NOKIA_C100_Draw_Pixel(uint8_t x, uint8_t y, uint16_t color)
