@@ -1,6 +1,8 @@
 /*************************************************
 * NOKIA C100 TFT LIBRARY
 *
+* CONTROLLER : SPFD54124B
+*
 * OCTOBER 30 2016
 * ANKIT BHATNAGAR
 * ANKIT.BHATNAGARINDIA@GMAIL.COM
